@@ -27,9 +27,11 @@ namespace CompositionSampleGallery
     public sealed partial class TreeEffects : SamplePage
     {
        
-        public static string        StaticSampleName    { get { return "Tree Effects"; } }
-        public override string      SampleName          { get { return StaticSampleName; } }
-        public override string      SampleDescription   { get { return "Use LayerVisual to apply an animated effect to a tree of SpriteVisuals"; } }
+        public static string        StaticSampleName => "Tree Effects"; 
+        public override string      SampleName => StaticSampleName; 
+        public static string        StaticSampleDescription => "Use LayerVisual to apply an animated effect to a tree of SpriteVisuals"; 
+        public override string      SampleDescription => StaticSampleDescription;
+        public override string      SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=869006";
 
         public TreeEffects()
         {

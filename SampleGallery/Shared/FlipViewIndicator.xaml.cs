@@ -15,7 +15,6 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI;
@@ -41,11 +40,31 @@ namespace CompositionSampleGallery
             this.InitializeComponent();
 
             _model = new FlipViewModel();
-#if SDKVERSION_14393
-            SampleDefinition item1 = SampleDefinitions.Definitions.Where(x => x.Type == typeof(Interactions3D)).FirstOrDefault();
-            SampleDefinition item2 = SampleDefinitions.Definitions.Where(x => x.Type == typeof(PullToAnimate)).FirstOrDefault();
-            _model.FlipViewItems.Add(new FeaturedFlipViewSample("Interaction Tracker 3D", "", "/Assets/BannerImages/IneractionTrackerBanner.png", item1));
-            _model.FlipViewItems.Add(new FeaturedFlipViewSample("Create custom resting points with animation", "", "/Assets/BannerImages/PullToAnimateBanner.PNG", item2));
+
+#if SDKVERSION_15063
+
+            SampleDefinition brushInterop = SampleDefinitions.Definitions.Where(x => x.Type == typeof(BrushInterop)).FirstOrDefault();
+            if (brushInterop != null)
+            {
+                _model.FlipViewItems.Add(new FeaturedFlipViewSample("Apply custom brushes to XAML content", "", "/Assets/BannerImages/BrushInterop.png", 0, brushInterop));
+            }
+            this.DataContext = _model;
+            SampleDefinition shyHeader = SampleDefinitions.Definitions.Where(x => x.Type == typeof(ShyHeader)).FirstOrDefault();
+            if (shyHeader != null)
+            {
+                _model.FlipViewItems.Add(new FeaturedFlipViewSample("Create a shrinking header tied to scroll position", "", "/Assets/BannerImages/ShyHeader.PNG", 1, shyHeader));
+            }
+            SampleDefinition pullToAnimate = SampleDefinitions.Definitions.Where(x => x.Type == typeof(PullToAnimate)).FirstOrDefault();
+            if (pullToAnimate != null)
+            {
+                _model.FlipViewItems.Add(new FeaturedFlipViewSample("Create depth of field with manipulation-based blur", "", "/Assets/BannerImages/PullToAnimateBanner.PNG", 2, pullToAnimate));
+            }
+            this.DataContext = _model;
+            SampleDefinition interactions3D = SampleDefinitions.Definitions.Where(x => x.Type == typeof(Interactions3D)).FirstOrDefault();
+            if (interactions3D != null)
+            {
+                _model.FlipViewItems.Add(new FeaturedFlipViewSample("Create an interactive 3D experience", "", "/Assets/BannerImages/IneractionTrackerBanner.png", 3, interactions3D));
+            }
             this.DataContext = _model;
 #endif
 
@@ -60,7 +79,7 @@ namespace CompositionSampleGallery
         {
             while (_ProgressFlipView)
             {
-                await Task.Delay(3000);
+                await Task.Delay(6000);
                 if (_ProgressFlipView)
                 {
                     BannerFlipView.SelectedIndex = (BannerFlipView.SelectedIndex + 1) % Model.FlipViewItems.Count;
@@ -70,13 +89,14 @@ namespace CompositionSampleGallery
 
         private void BannerFlipView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Model.Selected = ((FlipView)sender).SelectedItem as FeaturedFlipViewSample;
+            Model.Selected = (FeaturedFlipViewSample)((FlipView)sender).SelectedItem;
         }
 
+        // Navigate to the sample that the user selected
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             FeaturedFlipViewSample SelectedSample = BannerFlipView.SelectedItem as FeaturedFlipViewSample;
-            MainPage.Instance.NavigateToPage(typeof(SampleHost), SelectedSample.SampleDefinition);
+            MainNavigationViewModel.NavigateToSample(SelectedSample.SampleDefinition);
         }
 
         private void IndicatorClick(object sender, RoutedEventArgs e)
@@ -132,23 +152,26 @@ namespace CompositionSampleGallery
         private string _Description;
         private string _navigationUrl;
         private string _backgroundImage;
+        private int _index;
         private SampleDefinition _sampleDefinition;
         private bool _selected = default(bool);
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public FeaturedFlipViewSample(string title, string description, string backgroundImageUrl, SampleDefinition sampleDefinition = null, string navigationUrl = null)
+        public FeaturedFlipViewSample(string title, string description, string backgroundImageUrl, int index, SampleDefinition sampleDefinition = null, string navigationUrl = null)
         {
             _title = title;
             _Description = description;
             _navigationUrl = navigationUrl;
             _backgroundImage = backgroundImageUrl;
             _sampleDefinition = sampleDefinition;
+            _index = index;
         }
 
         public string Title { get { return _title; } }
         public string Description { get { return _Description; } }
         public string NavigationUrl { get { return _navigationUrl; } }
         public string BackgroundImage { get { return _backgroundImage; } }
+        public string AccessibilityIndexInfo { get { return "Skip to "+_index+"-"+_title; } }
         public SampleDefinition SampleDefinition { get { return _sampleDefinition; } }
         public bool Selected
         {
@@ -190,7 +213,7 @@ namespace CompositionSampleGallery
         {
             if(value != null)
             {
-                SolidColorBrush sbc = value as SolidColorBrush;
+                SolidColorBrush sbc = (SolidColorBrush)value;
                 if (sbc.Color == Colors.White)
                     return true;
             }

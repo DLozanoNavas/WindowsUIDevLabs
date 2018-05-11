@@ -12,9 +12,8 @@
 //
 //*********************************************************
 
-using System.Diagnostics;
+using System.Linq;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 
 namespace CompositionSampleGallery
 {
@@ -31,7 +30,7 @@ namespace CompositionSampleGallery
             {
                 if (value != null)
                 {
-                    FullSampleList.ItemsSource = value;
+                    FullSampleList.ItemsSource = value;                    
                 }
             }
         }
@@ -43,7 +42,24 @@ namespace CompositionSampleGallery
 
         private void FullSampleList_ItemClick(object sender, ItemClickEventArgs e)
         {
-            MainPage.FeaturedSampleList_ItemClick(sender, e);
+            MainNavigationViewModel.NavigateToSample(sender, e);
+        }
+
+        public void SetHeaderText(string text)
+        {
+            HeaderItem.Content = text;
+        }
+
+        public void SetNoContentTextVisibility(bool isVisible)
+        {
+            if (isVisible)
+            {
+                NoResultsTextBlock.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            }
+            else
+            {
+                NoResultsTextBlock.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            }
         }
     }
 }

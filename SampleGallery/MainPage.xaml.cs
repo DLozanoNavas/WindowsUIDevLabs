@@ -12,52 +12,62 @@
 //
 //*********************************************************
 
+using CompositionSampleGallery.Pages;
 using SamplesCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using Windows.UI;
 using Windows.UI.Composition;
 using Windows.UI.Core;
 using Windows.UI.Popups;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
 
 namespace CompositionSampleGallery
 {
     public sealed partial class MainPage : Page
     {
-        private static MainPage                 _instance;
         private ManagedSurface                  _splashSurface;
-#if SDKVERSION_INSIDER
+#if SDKVERSION_15063
         private static CompositionCapabilities  _capabilities;
 #endif
         private static bool                     _areEffectsSupported;
         private static bool                     _areEffectsFast;
-        private static RuntimeSupportedSDKs      _runtimeCapabilities;
+        private static RuntimeSupportedSDKs     _runtimeCapabilities;
+        private MainNavigationViewModel         _mainNavigation;        
+
+        private SampleDefinition                _dummySampleDefinition;
 
         public MainPage(Rect imageBounds)
         {
-            _instance = this;
-
-            // Get hardware capabilities and register changed event listener
-#if SDKVERSION_INSIDER
-            _capabilities           = CompositionCapabilities.GetForCurrentView();
-            _capabilities.Changed  += HandleCapabilitiesChangedAsync;
-            _areEffectsSupported    = _capabilities.AreEffectsSupported();
-            _areEffectsFast         = _capabilities.AreEffectsFast();
-#else
-            _areEffectsSupported    = true;
-            _areEffectsFast         = true;
-#endif
             _runtimeCapabilities = new RuntimeSupportedSDKs();
+
+            // Get hardware capabilities and register changed event listener only when targeting the 
+            // appropriate SDK version and the runtime supports this version
+            if (_runtimeCapabilities.IsSdkVersionRuntimeSupported(RuntimeSupportedSDKs.SDKVERSION._15063))
+            {
+#if SDKVERSION_15063
+                _capabilities = CompositionCapabilities.GetForCurrentView();
+                _capabilities.Changed += HandleCapabilitiesChangedAsync;
+                _areEffectsSupported = _capabilities.AreEffectsSupported();
+                _areEffectsFast = _capabilities.AreEffectsFast();
+#endif
+            }
+            else
+            {
+                _areEffectsSupported = true;
+                _areEffectsFast = true;
+            }
             this.InitializeComponent();
+            _mainNavigation = new MainNavigationViewModel(GalleryUI);
 
             // Initialize the image loader
             ImageLoader.Initialize(ElementCompositionPreview.GetElementVisual(this).Compositor);
@@ -65,23 +75,27 @@ namespace CompositionSampleGallery
             // Show the custome splash screen
             ShowCustomSplashScreen(imageBounds);
 
-            SystemNavigationManager.GetForCurrentView().BackRequested += OnBackRequested;
+            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = false;
 
-        }
+#if SDKVERSION_16299
+            // Apply acrylic styling to the navigation and caption
+            if (_runtimeCapabilities.IsSdkVersionRuntimeSupported(RuntimeSupportedSDKs.SDKVERSION._16299))
+            { 
+                // Extend the app into the titlebar so that we can apply acrylic
+                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+                ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                titleBar.ButtonBackgroundColor = Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                titleBar.ButtonForegroundColor = Colors.Black;
 
-        private void OnBackRequested(object sender, BackRequestedEventArgs e)
-        {
-            if (MainFrame.CanGoBack)
-            {
-                e.Handled = true;
-                MainFrame.GoBack();
+                // Apply acrylic to the main navigation
+                TitleBarRow.Height = new GridLength(31);
+                TitleBarGrid.Background = (Brush)Application.Current.Resources["SystemControlChromeMediumLowAcrylicWindowMediumBrush"];
             }
+#endif
         }
 
-        public static MainPage Instance
-        {
-            get { return _instance; }
-        }
+        public MainNavigationViewModel MainNavigation => _mainNavigation;
 
         public static bool AreEffectsSupported
         {
@@ -98,17 +112,13 @@ namespace CompositionSampleGallery
             get { return _runtimeCapabilities; }
         }
 
-#if SDKVERSION_INSIDER
+#if SDKVERSION_15063
         private async void HandleCapabilitiesChangedAsync(CompositionCapabilities sender, object args)
         {
             _areEffectsSupported = _capabilities.AreEffectsSupported();
             _areEffectsFast = _capabilities.AreEffectsFast();
 
-            if (MainFrame.Content is SampleHost host)
-            {
-                SamplePage page = (SamplePage)host.ContentFrame.Content;
-                page.OnCapabiliesChanged(_areEffectsSupported, _areEffectsFast);
-            }
+            GalleryUI.NotifyCompositionCapabilitiesChanged(_areEffectsSupported, _areEffectsFast);
 
             SampleDefinitions.RefreshSampleList();
 
@@ -163,7 +173,7 @@ namespace CompositionSampleGallery
 
             SpriteVisual backgroundSprite = compositor.CreateSpriteVisual();
             backgroundSprite.Size = windowSize;
-            backgroundSprite.Brush = compositor.CreateColorBrush(Color.FromArgb(1, 0, 178, 240));
+            backgroundSprite.Brush = compositor.CreateColorBrush(Color.FromArgb(255, 0, 188, 242));
             container.Children.InsertAtBottom(backgroundSprite);
 
 
@@ -209,8 +219,8 @@ namespace CompositionSampleGallery
             scaleUpSplashAnimation.Duration = duration;
 
             // Configure the grid visual to scale from the center
-            Visual gridVisual = ElementCompositionPreview.GetElementVisual(MainFrame);
-            gridVisual.Size = new Vector2((float)MainFrame.ActualWidth, (float)MainFrame.ActualHeight);
+            Visual gridVisual = ElementCompositionPreview.GetElementVisual(GalleryUI);
+            gridVisual.Size = new Vector2((float)GalleryUI.ActualWidth, (float)GalleryUI.ActualHeight);
             gridVisual.CenterPoint = new Vector3(gridVisual.Size.X, gridVisual.Size.Y, 0) * .5f;
 
 
@@ -243,59 +253,60 @@ namespace CompositionSampleGallery
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            NavigateToPage(typeof(HomePage));
-
             // Now that loading is complete, dismiss the custom splash screen
             HideCustomSplashScreen();
         }
 
-        public void NavigateToPage(Type page, object parameter = null)
-        {
-            MainFrame.Navigate(page, parameter);
-        }
-
-        private void MainFrame_Navigated(object sender, Windows.UI.Xaml.Navigation.NavigationEventArgs e)
-        {
-            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
-                ((Frame)sender).CanGoBack ?
-                AppViewBackButtonVisibility.Visible :
-                AppViewBackButtonVisibility.Collapsed;
-
-            // Close the SplitView if it's open
-            if (MainNavigationSplitView.IsPaneOpen)
-            {
-                MainNavigationSplitView.IsPaneOpen = false;
-            }
-        }
-
-        private void HamburgerButton_Click(object sender, RoutedEventArgs e)
-        {
-            MainNavigationSplitView.IsPaneOpen = !MainNavigationSplitView.IsPaneOpen;
-
-            if (MainNavigationSplitView.IsPaneOpen)
-            {
-                MainNavigationSplitView.OpenPaneLength = this.ActualWidth;
-            }
-
-        }
-
-        private void CloseSplitViewPane()
-        {
-            MainNavigationSplitView.IsPaneOpen = false;
-        }
-
         public static void FeaturedSampleList_ItemClick(object sender, ItemClickEventArgs e)
         {
-            SampleDefinition sample = (SampleDefinition)e.ClickedItem;
+            MainNavigationViewModel.NavigateToSample(sender, e);
+        }
 
-            foreach (SampleDefinition definition in SampleDefinitions.Definitions)
+
+        private void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             {
-                if (sample.Name == definition.Name)
+                var matches = from sampleDef in SampleDefinitions.Definitions
+                                 where sampleDef.DisplayName.IndexOf(sender.Text, StringComparison.CurrentCultureIgnoreCase) >= 0 
+                                    || (sampleDef.Tags != null && sampleDef.Tags.Any(str => str.IndexOf(sender.Text, StringComparison.CurrentCultureIgnoreCase) >= 0))
+                              select sampleDef;
+                
+                if(matches.Count() > 0)
                 {
-                    MainPage.Instance.NavigateToPage(typeof(SampleHost), definition);
-                    break;
+                    SearchBox.ItemsSource = matches.OrderByDescending(i => i.DisplayName.StartsWith(sender.Text, StringComparison.CurrentCultureIgnoreCase)).ThenBy(i => i.DisplayName);
+                }
+                else
+                {
+                    _dummySampleDefinition = new SampleDefinition("No results found", null, SampleType.Reference, SampleCategory.APIReference, false, false);
+                    SearchBox.ItemsSource = new SampleDefinition[] { _dummySampleDefinition };
                 }
             }
+        }
+
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            if (!string.IsNullOrEmpty(args.QueryText) && args.ChosenSuggestion == null)
+            {
+                MainNavigationViewModel.ShowSearchResults(args.QueryText);
+            }
+        }
+
+        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            if (((SampleDefinition)(args.SelectedItem)) == _dummySampleDefinition)
+            {
+                SearchBox.Text = "";
+            }
+            else
+            {
+                MainNavigationViewModel.NavigateToSample((SampleDefinition)args.SelectedItem);
+            }
+        }
+
+        private void SearchBox_AccessKeyInvoked(UIElement sender, Windows.UI.Xaml.Input.AccessKeyInvokedEventArgs args)
+        {
+            SearchBox.Focus(FocusState.Keyboard);
         }
     }
 
@@ -303,40 +314,36 @@ namespace CompositionSampleGallery
     // Windows.Foundation.UniversalApiContract of the runtime
     public class RuntimeSupportedSDKs
     {
-        Dictionary<SDKVERSION, bool> _supportedSDKs;
-        List<SDKVERSION> _allSupportedSDKs;
+        List<SDKVERSION> _supportedSDKs;
 
         public enum SDKVERSION
         {
             _10586 = 2,   // November Update (1511)
             _14393,       // Anniversary Update (1607)
-            _INSIDER      // Creators Update
+            _15063,       // Creators Update (1703)
+            _16299,       // Fall Creators Update
+            _INSIDER      // Insiders
         };
 
         public RuntimeSupportedSDKs()
         {
-            _supportedSDKs = new Dictionary<SDKVERSION, bool>();
-            _allSupportedSDKs = new List<SDKVERSION>();
+            _supportedSDKs = new List<SDKVERSION>();
 
             // Determine which versions of the SDK are supported on the runtime
             foreach(SDKVERSION v in Enum.GetValues(typeof(SDKVERSION)))
             {
-                bool versionSupported = false;
-                if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", (ushort)v))
+                if (ApiInformation.IsApiContractPresent("Windows.Foundation.UniversalApiContract", (ushort)Convert.ToInt32(v)))
                 {
-                    versionSupported = true;
-                    _allSupportedSDKs.Add(v);
+                    _supportedSDKs.Add(v);
                 }
-                _supportedSDKs.Add(v, versionSupported);
-                _allSupportedSDKs.Add(v);
             }
         }
 
         public bool IsSdkVersionRuntimeSupported(SDKVERSION sdkVersion)
         {
-            if (_supportedSDKs.ContainsKey(sdkVersion))
+            if(_supportedSDKs.Contains(sdkVersion))
             {
-                return _supportedSDKs[sdkVersion];
+                return true;
             }
             else
             {
@@ -348,7 +355,7 @@ namespace CompositionSampleGallery
         {
             get
             {
-                return _allSupportedSDKs;
+                return _supportedSDKs;
             }
         }
     }

@@ -12,6 +12,7 @@
 //
 //*********************************************************
 
+using ExpressionBuilder;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using SamplesCommon;
@@ -70,15 +71,17 @@ namespace CompositionSampleGallery
 
         }
 
-        public static string StaticSampleName { get { return "Light Spheres"; } }
-        public override string SampleName { get { return StaticSampleName; } }
-        public override string SampleDescription { get { return "Demonstrates a simulated 3D scene with multiple lights."; } }
+        public static string   StaticSampleName => "Light Spheres"; 
+        public override string SampleName => StaticSampleName; 
+        public static string   StaticSampleDescription => "Demonstrates a simulated 3D scene with multiple lights."; 
+        public override string SampleDescription => StaticSampleDescription;
+        public override string SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=869000";
 
         private async void SamplePage_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             ConstructWalls();
 
-            _normalMap = await ImageLoader.Instance.LoadFromUriAsync(new Uri("ms-appx:///Samples/SDK 14393/LightSpheres/SphericalWithMask.png"));
+            _normalMap = await ImageLoader.Instance.LoadFromUriAsync(new Uri("ms-appx:///Assets/NormalMapsAndMasks/SphericalWithMask.png"));
 
             LightControl1.Offset = new Vector3(-77, 21, -768);
             LightControl1.LightColor.Color = Color.FromArgb(255, 255, 255, 255);
@@ -177,6 +180,7 @@ namespace CompositionSampleGallery
                 _brushList.Add(brush);
 
                 SpriteVisual sprite = _compositor.CreateSpriteVisual();
+                sprite.BorderMode = CompositionBorderMode.Hard;
                 sprite.Brush = brush;
                 sprite.Size = new Vector2(200, 200);
                 sprite.Offset = new Vector3(xOffset, 0, 0) + _defaultSphereOffset;
@@ -285,12 +289,13 @@ namespace CompositionSampleGallery
         void UpdateAnimationState()
         {
             bool enabled = AnimateCheckBox.IsChecked == true ? true : false;
-
+ 
             Vector3KeyFrameAnimation offsetAnimation = _compositor.CreateVector3KeyFrameAnimation();
-            offsetAnimation.InsertExpressionKeyFrame(0, "this.StartingValue");
-            offsetAnimation.InsertExpressionKeyFrame(.33f, "this.StartingValue + Vector3(0, 0, -800)");
-            offsetAnimation.InsertExpressionKeyFrame(.66f, "this.StartingValue + Vector3(0, 0, 800)");
-            offsetAnimation.InsertExpressionKeyFrame(1, "this.StartingValue");
+            var vec3StartingValue = ExpressionValues.StartingValue.CreateVector3StartingValue();
+            offsetAnimation.InsertExpressionKeyFrame(0, vec3StartingValue);
+            offsetAnimation.InsertExpressionKeyFrame(.33f, vec3StartingValue + ExpressionFunctions.Vector3(0, 0, -800));
+            offsetAnimation.InsertExpressionKeyFrame(.66f, vec3StartingValue + ExpressionFunctions.Vector3(0, 0, 800));
+            offsetAnimation.InsertExpressionKeyFrame(1, vec3StartingValue);
             offsetAnimation.IterationBehavior = AnimationIterationBehavior.Forever;
             offsetAnimation.Duration = TimeSpan.FromSeconds(10);
 

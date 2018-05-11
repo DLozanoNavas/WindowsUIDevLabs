@@ -13,20 +13,17 @@
 //*********************************************************
 
 using CompositionSampleGallery.Shared;
-using Microsoft.Graphics.Canvas;
+using ExpressionBuilder;
 using Microsoft.Graphics.Canvas.Effects;
 using SamplesCommon;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Graphics.Effects;
-using Windows.UI;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
+
+using EF = ExpressionBuilder.ExpressionFunctions;
 
 namespace CompositionSampleGallery
 {
@@ -44,10 +41,12 @@ namespace CompositionSampleGallery
             InitializeComponent();
         }
 
-        public static string    StaticSampleName    { get { return "Layer Depth"; } }
-        public override string  SampleName          { get { return StaticSampleName; } }
-        public override string  SampleDescription   { get { return "Demonstrates how to achieve a depth-of-field effect with LayerVisual and EffectBrush."; } }
-        
+        public static string    StaticSampleName => "Layer Depth"; 
+        public override string  SampleName => StaticSampleName;
+        public static string    StaticSampleDescription => "Demonstrates how to achieve a depth-of-field effect with LayerVisual and EffectBrush."; 
+        public override string  SampleDescription => StaticSampleDescription;
+        public override string SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=868997";
+
         public IReadOnlyList<Layer> Layers { get { return layers; } }
 
         public int SelectedLayerIndex
@@ -79,9 +78,13 @@ namespace CompositionSampleGallery
             selectedLayerIndex = layers.Count / 2;
 
             int layerIndex = 0;
-            foreach (var item in new LocalDataSource().Items)
+            // Divide the images from the data source over the layer items
+            // Recycle data source images if necessary
+            var datasource = (new LocalDataSource()).Nature;
+
+            for (int i=0; i<layers.Count*4; i++)
             {
-                var uri = new Uri(item.ImageUrl);
+                var uri = new Uri(datasource[i % datasource.Count].ImageUrl);
                 var layer = layers[layerIndex];
                 layer.AddItem(uri);
 
@@ -138,27 +141,19 @@ namespace CompositionSampleGallery
             var itemContainerVisual = layer.ItemContainerVisual;
 
             var compositor = layerVisual.Compositor;
-            
+            var currentZNode = _animationPropertySet.GetReference().GetScalarProperty("currentZ");
+
             // Opacity and saturation go to zero with as |deltaZ| -> 1
-            var opacityAndSaturationExpression = compositor.CreateExpressionAnimation(
-                "max(0, 1 - abs(globals.currentZ - layerZ))");
-            opacityAndSaturationExpression.SetScalarParameter("layerZ", layerZ);
-            opacityAndSaturationExpression.SetReferenceParameter("globals", _animationPropertySet);
+            var opacityAndSaturationExpression = EF.Max(0, 1 - EF.Abs(currentZNode - layerZ));
             layerVisual.StartAnimation(nameof(layerVisual.Opacity), opacityAndSaturationExpression);
             layerVisual.Effect.Properties.StartAnimation("saturation.Saturation", opacityAndSaturationExpression);
 
             // Scale changes with deltaZ (perspective-like)
-            var scaleExpression = compositor.CreateExpressionAnimation(
-                "Vector3(pow(1.5, globals.currentZ - layerZ), pow(1.5, globals.currentZ - layerZ), 0)");
-            scaleExpression.SetScalarParameter("layerZ", layerZ);
-            scaleExpression.SetReferenceParameter("globals", _animationPropertySet);
+            var scaleExpression = EF.Vector3(EF.Pow(1.5f, currentZNode - layerZ), EF.Pow(1.5f, currentZNode - layerZ), 0);
             itemContainerVisual.StartAnimation(nameof(layerVisual.Scale), scaleExpression);
 
             // Blur increases with |deltaZ|
-            var blurAmountExpression = compositor.CreateExpressionAnimation(
-                "abs(globals.currentZ - layerZ) * 10");
-            blurAmountExpression.SetScalarParameter("layerZ", layerZ);
-            blurAmountExpression.SetReferenceParameter("globals", _animationPropertySet);
+            var blurAmountExpression = EF.Abs(currentZNode - layerZ) * 10;
             layerVisual.Effect.Properties.StartAnimation("blur.BlurAmount", blurAmountExpression);
         }
 
@@ -259,7 +254,9 @@ namespace CompositionSampleGallery
             public SpriteVisual CreateVisual(Compositor compositor)
             {
                 _visual = compositor.CreateSpriteVisual();
-                _visual.Brush = _surface.Brush;
+                var brush = _surface.Brush;
+                brush.Stretch = CompositionStretch.UniformToFill;
+                _visual.Brush = brush;
                 return _visual;
             }
         }

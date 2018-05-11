@@ -53,6 +53,12 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
+        <Grid.ChildrenTransitions>
+            <TransitionCollection>
+                <EntranceThemeTransition/>
+            </TransitionCollection>
+        </Grid.ChildrenTransitions>
+
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition x:Name="Column1" />
@@ -67,9 +73,6 @@
         
         <!-- Windows Insider -->
         <Grid x:Name="InsiderGrid" Grid.Row="0" Grid.Column="0" Tapped="InsiderPanel_Tapped" Background="#204C78">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-            </Grid.RowDefinitions>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock 
                            x:Name="InsiderTextBlock"
@@ -78,9 +81,9 @@
                            HorizontalAlignment="Center" 
                            VerticalAlignment="Center"
                            TextAlignment="Center"
-                           Padding="0,0,0,10" />
+                            />
                     <Button 
-                        Content="GET INSIDE"
+                        Content="JOIN NOW"
                         HorizontalAlignment="Center" />
                 </StackPanel>
         </Grid>
@@ -91,15 +94,15 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="2*"/>
                 <RowDefinition Height="3*" />
-                <RowDefinition Height="1*" />
+                <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
             <Grid Grid.Row="0" HorizontalAlignment="Stretch" Height="38">
-                <Image Source="ms-appx:///Assets/Twitter_Logo_White_On_Blue.png" />
+                <Image Source="ms-appx:///Assets/Other/Twitter_Logo_White_On_Blue.png" />
             </Grid>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Row="1">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1">
                 <TextBlock HorizontalAlignment="Center" Style="{StaticResource SubSectionHeading}">Follow us</TextBlock>
-                <TextBlock HorizontalAlignment="Center" Style="{StaticResource BaseTextBlockStyleLight}" Margin="0,50,0,0">WindowsUI</TextBlock>
-                <TextBlock HorizontalAlignment="Center" Style="{StaticResource BaseTextBlockStyleLight}" Foreground="#BFFFFFFF">@WindowsUI</TextBlock>
+
+                <HyperlinkButton HorizontalAlignment="Center" Foreground="White"  Content="@WindowsUI" NavigateUri="https://twitter.com/windowsui"></HyperlinkButton> 
             </StackPanel>
             <TextBlock Grid.Row="2" Style="{StaticResource BaseTextBlockStyleSmallLight}" Padding="5" HorizontalAlignment="Center" VerticalAlignment="Bottom">
                 TWITTER, TWEET, RETWEET and the Twitter logo are trademarks of Twitter, Inc. or its affiliates
@@ -109,12 +112,14 @@
         
         <!-- GitHub -->
         <Grid x:Name="GitHubPanel" Grid.Row="0" Grid.Column="2" Tapped="GitHubPanel_Tapped" Background="#798886">
-            <TextBlock Grid.Row="0"
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Grid.Row="0"
                        Style="{StaticResource SubSectionHeading}"
-                       Margin="10"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"
                        TextAlignment="Center">Get the sample code on GitHub</TextBlock>
+                <HyperlinkButton HorizontalAlignment="Center" Foreground="White" Content="aka.ms/windowsui" NavigateUri="https://aka.ms/windowsui"></HyperlinkButton>
+            </StackPanel>
         </Grid>
         <!-- End GitHub -->
         

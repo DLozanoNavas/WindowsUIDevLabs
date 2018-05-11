@@ -44,9 +44,11 @@ namespace CompositionSampleGallery
         private ValueTimer<float> _valueTimerYSlider;
         private ValueTimer<float> _valueTimerScaleSlider;
 
-        public static string StaticSampleName { get { return "Nine-Grid Resizing"; } }
-        public override string SampleName { get { return StaticSampleName; } }
-        public override string SampleDescription { get { return "Resize and Scale a SpriteVisual painted with a NineGridBrush"; } }
+        public static string StaticSampleName => "Nine-Grid Resizing"; 
+        public override string SampleName => StaticSampleName; 
+        public static string StaticSampleDescription => "Resize and Scale a SpriteVisual painted with a NineGridBrush"; 
+        public override string SampleDescription => StaticSampleDescription;
+        public override string SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=869001";
 
         public NineGridResizing()
         {
@@ -66,7 +68,7 @@ namespace CompositionSampleGallery
             // Create ninegridbrush and paint on visual;
             _ninegridBrush = _compositor.CreateNineGridBrush();
             _ninegridVisual.Brush = _ninegridBrush;
-            _ninegridSurface = ImageLoader.Instance.LoadFromUri(new Uri("ms-appx:///Samples/SDK 14393/NineGridResizing/RoundedRect.png"));
+            _ninegridSurface = ImageLoader.Instance.LoadFromUri(new Uri("ms-appx:///Assets/Other/RoundedRect.png"));
 
             // Clip compgrid 
             var compGrid = ElementCompositionPreview.GetElementVisual(CompGrid);

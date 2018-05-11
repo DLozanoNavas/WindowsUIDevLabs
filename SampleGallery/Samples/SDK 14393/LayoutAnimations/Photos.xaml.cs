@@ -13,33 +13,39 @@
 //*********************************************************
 
 using System;
-using System.Numerics;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Hosting;
-using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
+using System.Collections.ObjectModel;
+using CompositionSampleGallery.Shared;
 
 namespace CompositionSampleGallery
 {
     public sealed partial class Photos : SamplePage
     {
-        public static string StaticSampleName { get { return "Layout Animations"; } }
-        public override string SampleName { get { return StaticSampleName; } }
-        public override string SampleDescription { get { return "Animate Layout updates using Implicit animations. Resize the window to see pictures animate to their new location."; } }
+        public static string    StaticSampleName => "Layout Animations";
+        public override string  SampleName => StaticSampleName; 
+        public static string    StaticSampleDescription => "Animate Layout updates using Implicit animations. Resize the window to see pictures animate to their new location."; 
+        public override string  SampleDescription => StaticSampleDescription;
+        public override string SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=868999";
 
         Compositor _compositor;
         ImplicitAnimationCollection _elementImplicitAnimation;
+        public LocalDataSource Model { set; get; }
 
         public Photos()
         {
             this.InitializeComponent();
             _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+            Model = new LocalDataSource();
 
             // Create ImplicitAnimations Collection. 
             _elementImplicitAnimation = _compositor.CreateImplicitAnimationCollection();
 
             //Define trigger and animation that should play when the trigger is triggered. 
             _elementImplicitAnimation["Offset"] = createOffsetAnimation();
+
+            gridView.ItemsSource = Model.AggregateDataSources(new ObservableCollection<Thumbnail>[] { Model.Landscapes, Model.Nature });
 
         }
 

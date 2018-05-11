@@ -238,11 +238,11 @@ namespace CompositionSampleGallery
             DataContext = this;
         }
 
-        public static string        StaticSampleName    { get { return "Layer Visual Sample"; } }
-        public override string      SampleName          { get { return StaticSampleName; } }
-        public override string      SampleDescription   { get { return "Layer visual in the 3d space with 3D perspective transform"; } }
-        // TODO: To add this sample's url when it is available.
-        //public override string      SampleCodeUri            { get { return ""; } }
+        public static string        StaticSampleName => "Layer Visual Sample"; 
+        public override string      SampleName => StaticSampleName; 
+        public static string        StaticSampleDescription => "Layer visual in the 3d space with 3D perspective transform"; 
+        public override string      SampleDescription => StaticSampleDescription;
+        public override string      SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=868998";
 
         private async void Page_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
@@ -455,9 +455,9 @@ namespace CompositionSampleGallery
 
         async private Task LoadImages()
         {
-            string[] imageNames = { "Photos/Pic06", "Photos/Pic30", "Photos/Pic39", "Landscapes/Landscape-7",
-                "Landscapes/Landscape-8", "Landscapes/Landscape-9", "Landscapes/Landscape-12", "Photos/pic22",
-                "Photos/Pic11" };
+            string[] imageNames = { "Abstract/Abstract-1", "Abstract/Abstract-2", "Abstract/Abstract-4", "Landscapes/Landscape-1",
+                "Landscapes/Landscape-2", "Landscapes/Landscape-4", "Nature/Nature-1", "Nature/Nature-2",
+                "Nature/Nature-4" };
 
             for (int i = 0; i < imageNames.Length; ++i)
             {

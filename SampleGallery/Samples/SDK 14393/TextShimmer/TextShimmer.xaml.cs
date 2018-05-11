@@ -28,9 +28,11 @@ namespace CompositionSampleGallery
             this.Loaded += TextShimmer_Loaded;
         }
 
-        public static string        StaticSampleName    { get { return "Text Shimmer"; } }
-        public override string      SampleName          { get { return StaticSampleName; } }
-        public override string      SampleDescription   { get { return "Target a XAML UIElement with a Composition Light"; } }
+        public static string        StaticSampleName => "Text Shimmer";
+        public override string      SampleName => StaticSampleName; 
+        public static string        StaticSampleDescription => "Target a XAML UIElement with a Composition Light"; 
+        public override string      SampleDescription => StaticSampleDescription;
+        public override string SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=869005";
 
         private void TextShimmer_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {

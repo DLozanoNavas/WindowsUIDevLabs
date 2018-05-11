@@ -18,9 +18,8 @@ using Microsoft.Graphics.Canvas.Effects;
 using SamplesCommon;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Numerics;
-using System.Threading.Tasks;
-using Windows.Foundation;
 using Windows.Graphics.Effects;
 using Windows.UI;
 using Windows.UI.Composition;
@@ -57,15 +56,16 @@ namespace CompositionSampleGallery
             this.InitializeComponent();
         }
 
-        public static string StaticSampleName       { get { return "Foreground Focus Effects"; } }
-        public override string SampleName           { get { return StaticSampleName; } }
-        public override string SampleDescription    { get { return "Demonstrates how to use a BackDrop effect to deemphasize background content. Click on any thumbnail to trigger the selected effect."; } }
-        public override string SampleCodeUri        { get { return "http://go.microsoft.com/fwlink/p/?LinkID=761179"; } }
+        public static string    StaticSampleName => "Foreground Focus Effects"; 
+        public override string  SampleName => StaticSampleName;
+        public static string    StaticSampleDescription => "Demonstrates how to use a BackDrop effect to deemphasize background content. Click on any thumbnail to trigger the selected effect.";
+        public override string  SampleDescription => StaticSampleDescription; 
+        public override string  SampleCodeUri => "http://go.microsoft.com/fwlink/p/?LinkID=761179"; 
 
         public LocalDataSource Model { set; get; }
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            ThumbnailList.ItemsSource = Model.Items;
+            ThumbnailList.ItemsSource = ThumbnailList.ItemsSource = Model.AggregateDataSources(new ObservableCollection<Thumbnail>[] { Model.Landscapes, Model.Nature });
 
             // Populate the Effect combobox
             IList<ComboBoxItem> effectList = new List<ComboBoxItem>();
@@ -90,8 +90,8 @@ namespace CompositionSampleGallery
             // Start out with the destination layer invisible to avoid any cost until necessary
             _destinationSprite.IsVisible = false;
 
-            // Create the mask surface
-            _maskSurface = await ImageLoader.Instance.LoadFromUriAsync(new Uri("ms-appx:///Samples/SDK 14393/ForegroundFocusEffects/mask.png"));
+            // Create the .png surface
+            _maskSurface = await ImageLoader.Instance.LoadFromUriAsync(new Uri("ms-appx:///Assets/NormalMapsAndMasks/ForegroundFocusMask.png"));
 
             ElementCompositionPreview.SetElementChildVisual(ThumbnailList, _destinationSprite);
 

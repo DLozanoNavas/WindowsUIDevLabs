@@ -26,7 +26,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Composition;
 
 using SamplesNative;
-
+using Windows.Storage;
 
 namespace SamplesCommon
 {
@@ -144,6 +144,15 @@ namespace SamplesCommon
         {
             ManagedSurface surface = new ManagedSurface(CreateSurface(size));
             var ignored = surface.Draw(_graphicsDevice, _drawingLock, new BitmapDrawer(uri, handler));
+
+            return surface;
+        }
+
+        public ManagedSurface LoadFromFile(StorageFile file, Size size, LoadTimeEffectHandler handler)
+        {
+            ManagedSurface surface = new ManagedSurface(CreateSurface(size));
+
+            var ignored = surface.Draw(_graphicsDevice, _drawingLock, new BitmapDrawer(file, handler));
 
             return surface;
         }

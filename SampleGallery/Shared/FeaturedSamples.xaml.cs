@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Animation;
 
 namespace CompositionSampleGallery
 {
@@ -72,10 +71,16 @@ namespace CompositionSampleGallery
         // to feature so we'll hide it
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            IEnumerable<CompositionSampleGallery.SampleDefinition> items = this.ItemsSource as IEnumerable<CompositionSampleGallery.SampleDefinition>;
+            IEnumerable<CompositionSampleGallery.SampleDefinition> items = (IEnumerable < CompositionSampleGallery.SampleDefinition > )(this.ItemsSource);
 
             if(items.Count<SampleDefinition>() == 0)    
                 this.Visibility = Visibility.Collapsed;
+        }
+
+        // Navigate up to the parent frame and trigger a navigation
+        private void NewSamplesList_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            MainNavigationViewModel.NavigateToSample(sender, e);
         }
     }
 }

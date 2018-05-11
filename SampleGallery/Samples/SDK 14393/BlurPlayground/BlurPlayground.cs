@@ -12,35 +12,34 @@
 //
 //*********************************************************
 
-using CompositionSampleGallery.Shared;
 using Microsoft.Graphics.Canvas.Effects;
 using SamplesCommon;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Hosting;
-using Windows.UI.Xaml.Media.Imaging;
 
 namespace CompositionSampleGallery
 {
     public sealed partial class BlurPlayground : SamplePage
     {
-        private CompositionEffectBrush  _brush;
-        private Compositor              _compositor;
-       
+        private CompositionEffectBrush _brush;
+        private Compositor _compositor;
+
         public BlurPlayground()
         {
             _compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
             this.InitializeComponent();
         }
 
-        public static string   StaticSampleName     { get { return "Blur Playground"; } }
-        public override string SampleName           { get { return StaticSampleName; } }
-        public override string SampleDescription    { get { return "This is a place to play around with different blur and color blend recipes"; } }
+        public static string    StaticSampleName => "Blur Playground"; 
+        public override string  SampleName => StaticSampleName;
+        public static string    StaticSampleDescription => "This is a place to play around with different blur and blend recipes";
+        public override string  SampleDescription => StaticSampleDescription;
+        public override string SampleCodeUri => "https://go.microsoft.com/fwlink/?linkid=868995";
 
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
@@ -67,10 +66,7 @@ namespace CompositionSampleGallery
             BlendSelection.ItemsSource = blendList;
             BlendSelection.SelectedIndex = 0;
 
-            BitmapImage image = new BitmapImage(new Uri("ms-appx:///Assets/Landscapes/Landscape-7.jpg"));
-            BackgroundImage.Source = image;
-            
-                         
+
         }
 
         private void BlendSelection_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -91,46 +87,29 @@ namespace CompositionSampleGallery
                 Foreground = new GaussianBlurEffect()
                 {
                     Name = "Blur",
-                    Source = new CompositionEffectSourceParameter("Backdrop"),
+                    Source = new CompositionEffectSourceParameter("ImageSource"),
                     BlurAmount = (float)BlurAmount.Value,
                     BorderMode = EffectBorderMode.Hard,
                 }
-            };
+                };
 
-            var blurEffectFactory = _compositor.CreateEffectFactory(graphicsEffect, 
-                new[] { "Blur.BlurAmount", "Tint.Color"});
+       
+            var blurEffectFactory = _compositor.CreateEffectFactory(graphicsEffect,
+                new[] { "Blur.BlurAmount", "Tint.Color" });
 
-            // Create EffectBrush, BackdropBrush and SpriteVisual
+            // Create EffectBrush to be painted on CompositionImage Control’s SpriteVisual
             _brush = blurEffectFactory.CreateBrush();
+            _brush.SetSourceParameter("ImageSource", CatImage.SurfaceBrush);
+            CatImage.Brush = _brush;
 
-            // If the animation is running, restart it on the new brush
+            //If the animation is running, restart it on the new brush
             if (AnimateToggle.IsOn)
             {
                 StartBlurAnimation();
             }
-
-            var destinationBrush = _compositor.CreateBackdropBrush();
-            _brush.SetSourceParameter("Backdrop", destinationBrush);
-
-            var blurSprite = _compositor.CreateSpriteVisual();
-            blurSprite.Size = new Vector2((float)BackgroundImage.ActualWidth, (float)BackgroundImage.ActualHeight);
-            blurSprite.Brush = _brush;
-
-            ElementCompositionPreview.SetElementChildVisual(BackgroundImage, blurSprite);
+      
         }
-
-        private void BackgroundImage_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            SpriteVisual blurVisual = (SpriteVisual)ElementCompositionPreview.GetElementChildVisual(BackgroundImage);
-
-            if (blurVisual != null)
-            {
-                blurVisual.Size = e.NewSize.ToVector2();
-            }
-
-        }
-
-        private void BlurAmount_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+       private void BlurAmount_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             // Get slider value
             var blur_amount = (float)e.NewValue;
@@ -138,7 +117,13 @@ namespace CompositionSampleGallery
             // Set new BlurAmount
             _brush.Properties.InsertScalar("Blur.BlurAmount", blur_amount);
         }
-            
+
+
+        private void isEnabled (object sender, RangeBaseValueChangedEventArgs e)
+        {
+            _brush.StopAnimation("Blur.BlurAmount");
+        }
+
         private void ColorChanged(object sender, ColorEventArgs e)
         {
             if (_brush != null)
@@ -153,10 +138,17 @@ namespace CompositionSampleGallery
             if (AnimateToggle.IsOn)
             {
                 StartBlurAnimation();
+                BlurAmount.IsEnabled = false;
             }
             else
             {
                 _brush.StopAnimation("Blur.BlurAmount");
+                BlurAmount.IsEnabled = true;
+                BlurAmount.Value = 0;
+                _brush.Properties.InsertScalar("Blur.BlurAmount", 0);
+
+
+               
             }
         }
 
@@ -169,6 +161,6 @@ namespace CompositionSampleGallery
             blurAnimation.Duration = TimeSpan.FromSeconds(4);
             blurAnimation.IterationBehavior = AnimationIterationBehavior.Forever;
             _brush.StartAnimation("Blur.BlurAmount", blurAnimation);
+    }
         }
     }
-}
